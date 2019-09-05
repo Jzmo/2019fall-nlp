@@ -1,0 +1,89 @@
+#! /usr/bin/python
+import sys
+import random
+import argparse
+
+class Node:
+    def __init__(self,x):
+        self.val = x
+        self.next = None
+def store_dict(line):
+    key = line[1]
+    value = line[2].split(' ')
+    value = value[:value.index('')] if '' in value else value
+    if key in dict_:
+        dict_[key][0].append(value)
+        dict_[key][1].append(int(line[0]))
+    else:
+        dict_[key] = ([value],[int(line[0])])
+
+class CFG:
+    def __init__(self, M, dict_):
+        self.n_nd = None
+        self.M = M
+        self.dict_ = dict_
+        self.prev = ''
+        self.root = None
+    def build(self,root):
+        self.root = root
+        self.n_nd = 0
+        self.random_tree(root)
+        self.n_nd = 0
+    def random_tree(self,root):
+        if root.val not in self.dict_:
+            self.prev = ''
+            return
+        else:
+            self.prev +='('+root.val + ' '
+            self.n_nd +=1
+            if self.n_nd >= self.M:
+                self.prev = ''
+                return
+            leafs = random.choices(self.dict_[root.val][0],weights = self.dict_[root.val][1])[0]
+            root.next = [Node(l) for l in leafs]
+            for l in root.next:
+                self.random_tree(l)
+    def print_tree(self, prefix,last_nd,root):
+        curr = root
+        if not curr: print('(ROOT)')
+        if curr.next is None:
+            print(prefix + curr.val + ')')
+            prefix = ' '*(len(prefix) - len(last_nd)-2)
+            return prefix
+        else:
+            prefix += '('+curr.val+' '
+            for l in curr.next:
+                prefix = self.print_tree(prefix,curr.val,l)
+        return ' '*(len(prefix) - len(last_nd)-1)
+        
+    
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()    
+    parser.add_argument('-t',action = 'store_true',required = False)
+    parser.add_argument('res', nargs='*')
+    
+    args = parser.parse_args()
+    use_parse = args.t
+    res = args.res
+    
+    gr_path = res[0]
+    n_sent = int(res[1]) if len(res) >1  else 1
+    M = int(res[2]) if len(res) >2  else 450
+    parse = []
+    dict_ =  {}
+    with open(gr_path,'r', encoding='utf-8') as f:
+        for line in f.readlines():
+            line = line.rstrip().split('\t')
+            if line[0].isnumeric():
+                store_dict(line)
+    f.close()
+
+
+    for i in range(n_sent):
+        root = Node('ROOT')
+        cfg = CFG(M,dict_)
+        cfg.build(root)
+        print('============================================================')
+        cfg.print_tree('','',root)
+    
