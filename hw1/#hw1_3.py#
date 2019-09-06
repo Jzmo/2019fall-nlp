@@ -21,30 +21,41 @@ class CFG:
     def __init__(self, M, dict_):
         self.n_nd = None
         self.M = M
-        self.sent = None
         self.dict_ = dict_
-
+        self.prev = ''
+        self.root = None
     def build(self,root):
-        self.sent = []
+        self.root = root
         self.n_nd = 0
         self.random_tree(root)
         self.n_nd = 0
     def random_tree(self,root):
         if root.val not in self.dict_:
-            self.sent.append(root.val)
+            self.prev = ''
             return
         else:
+            self.prev +='('+root.val + ' '
             self.n_nd +=1
             if self.n_nd >= self.M:
-                self.sent.append('...')
+                self.prev = ''
                 return
             leafs = random.choices(self.dict_[root.val][0],weights = self.dict_[root.val][1])[0]
             root.next = [Node(l) for l in leafs]
             for l in root.next:
                 self.random_tree(l)
-    def get_sent(self):
-        return self.sent
-
+    def print_tree(self, prefix,last_nd,root):
+        curr = root
+        if not curr: print('(ROOT)')
+        if curr.next is None:
+            print(prefix + curr.val + ')')
+            prefix = ' '*(len(prefix) - len(last_nd)-2)
+            return prefix
+        else:
+            prefix += '('+curr.val+' '
+            for l in curr.next:
+                prefix = self.print_tree(prefix,curr.val,l)
+        return ' '*(len(prefix) - len(last_nd))
+        
     
 if __name__ == '__main__':
 
@@ -73,7 +84,6 @@ if __name__ == '__main__':
         root = Node('ROOT')
         cfg = CFG(M,dict_)
         cfg.build(root)
-        sent = cfg.get_sent()
-        print(' '.join(sent))
-    
+        print('============================================================')
+        cfg.print_tree('','',root)
     
